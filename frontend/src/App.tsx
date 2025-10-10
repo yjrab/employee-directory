@@ -11,7 +11,6 @@ export default function App() {
 
   const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     if (!user) return <>{children}</>;
-    const isAdmin = user.role === "ADMIN";
 
     return (
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[260px_1fr] grid-rows-[auto_1fr] lg:grid-rows-1">
