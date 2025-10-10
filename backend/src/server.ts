@@ -10,7 +10,6 @@ server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT} (env=${process.env.NODE_ENV || "development"})`);
 });
 
-// graceful shutdown
 const shutdown = async (signal: string) => {
   try {
     console.log(`Received ${signal}. Closing http server...`);

@@ -13,14 +13,14 @@ import {
   updateEmployee,
   deleteEmployee,
 } from "../controllers/employeeController";
-import { authenticate } from "../middleware/authMiddleware";
+import { authenticate, requireAdmin, requireSelfEmployeeOrAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 
 router.get("/", validate(listQuerySchema, "query"), listEmployees);
 router.get("/:id", validate(idParamSchema, "params"), getEmployee);
-router.post("/", authenticate, validate(createEmployeeSchema, "body"), createEmployee);
-router.put("/:id", authenticate, validate(idParamSchema, "params"), validate(updateEmployeeSchema, "body"), updateEmployee);
-router.delete("/:id", authenticate, validate(idParamSchema, "params"), deleteEmployee);
+router.post("/", authenticate, requireAdmin, validate(createEmployeeSchema, "body"), createEmployee);
+router.put("/:id", authenticate, requireSelfEmployeeOrAdmin, validate(idParamSchema, "params"), validate(updateEmployeeSchema, "body"), updateEmployee);
+router.delete("/:id", authenticate, requireAdmin, validate(idParamSchema, "params"), deleteEmployee);
 
 export default router;

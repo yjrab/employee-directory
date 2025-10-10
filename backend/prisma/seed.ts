@@ -39,7 +39,7 @@ async function main() {
   
     const employeeHashedPassword = await bcrypt.hash(employeePayload.user!.password!, 10);
     await prisma.employee.create({
-        data: {     
+        data: {
           jobTitle: employeePayload.jobTitle,
           department: employeePayload.department,
           location: employeePayload.location,

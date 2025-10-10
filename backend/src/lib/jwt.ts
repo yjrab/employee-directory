@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { TokenPayload } from "../types/interfaces";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -13,14 +14,16 @@ if (!REFRESH_TOKEN_SECRET) {
   throw new Error("REFRESH_TOKEN_SECRET is invalid");
 }
 
-export const generateAccessToken = (payload: object) =>
+export const generateAccessToken = (payload: TokenPayload) =>
   jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
 
-export const generateRefreshToken = (payload: object) =>
-  jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
+export const generateRefreshToken = (payload: TokenPayload) =>
+  jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });;
 
-export const verifyAccessToken = (token: string) =>
-  jwt.verify(token, ACCESS_TOKEN_SECRET);
-
-export const verifyRefreshToken = (token: string) =>
-  jwt.verify(token, REFRESH_TOKEN_SECRET);
+export const verifyRefreshToken = (token: string): TokenPayload | null => {
+  try {
+    return jwt.verify(token, REFRESH_TOKEN_SECRET) as TokenPayload;
+  } catch {
+    return null;
+  }
+};

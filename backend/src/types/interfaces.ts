@@ -1,6 +1,9 @@
-// src/types/index.ts
 import { Role } from "@prisma/client";
 
+export interface TokenPayload {
+  userId: string;
+  role: "ADMIN" | "EMPLOYEE";
+}
 export interface UserPayload {
   id?: string;
   email: string;

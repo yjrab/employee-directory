@@ -14,11 +14,15 @@ export async function listEmployees(req: Request, res: Response) {
   if (location) where.location = location;
 
   if (search) {
+    const q = String(search);
     where.OR = [
-      { firstName: { contains: search, mode: "insensitive" } },
-      { lastName: { contains: search, mode: "insensitive" } },
-      { email: { contains: search, mode: "insensitive" } },
-      { jobTitle: { contains: search, mode: "insensitive" } },
+      { jobTitle: { contains: q, mode: "insensitive" } },
+      { department: { contains: q, mode: "insensitive" } },
+      { location: { contains: q, mode: "insensitive" } },
+      { user: { firstName: { contains: q, mode: "insensitive" } } },
+      { user: { lastName: { contains: q, mode: "insensitive" } } },
+      { user: { email: { contains: q, mode: "insensitive" } } },
+      { user: { phone: { contains: q, mode: "insensitive" } } },
     ];
   }
 
@@ -30,7 +34,7 @@ export async function listEmployees(req: Request, res: Response) {
         skip,
         take: Number(limit),
         orderBy: { createdAt: "desc" },
-        include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, pictureUrl: true } } },
+        include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, pictureUrl: true, phone: true } } },
       }),
     ]);
 
@@ -51,7 +55,7 @@ export async function getEmployee(req: Request, res: Response) {
   try {
     const employee = await prisma.employee.findUnique({
       where: { id },
-      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, pictureUrl: true } } },
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, pictureUrl: true, phone: true } } },
     });
 
     if (!employee) return res.status(404).json({ error: "Employee not found" });
@@ -66,13 +70,7 @@ export async function getEmployee(req: Request, res: Response) {
 export async function createEmployee(req: Request, res: Response) {
   const payload = req.body;
 
-  // build prisma data object safely
   const data: any = {
-    firstName: payload.firstName,
-    lastName: payload.lastName,
-    email: payload.email,
-    phone: payload.phone ?? null,
-    pictureUrl: payload.pictureUrl ?? null,
     jobTitle: payload.jobTitle,
     department: payload.department,
     location: payload.location ?? null,
@@ -84,28 +82,38 @@ export async function createEmployee(req: Request, res: Response) {
       // connect to existing user by id
       data.user = { connect: { id: payload.userId } };
     } else if (payload.user) {
-      // nested create user
-      const nested = { ...payload.user };
-      if (nested.password) {
-        nested.password = await hashPassword(nested.password);
-      } else {
-        delete nested.password;
-      }
-
+      // nested create user using provided user payload
+      const nested = { ...payload.user } as any;
+      const hashed = await hashPassword(nested.password || "changeme");
       data.user = {
         create: {
           email: nested.email,
           firstName: nested.firstName ?? payload.firstName,
           lastName: nested.lastName ?? payload.lastName,
-          ...(nested.password ? { password: nested.password } : {}),
+          password: hashed,
           role: nested.role ?? "EMPLOYEE",
+          phone: nested.phone ?? payload.phone ?? null,
+          pictureUrl: nested.pictureUrl ?? payload.pictureUrl ?? null,
+        },
+      };
+    } else if (payload.email || payload.firstName || payload.lastName) {
+      const hashed = await hashPassword("changeme");
+      data.user = {
+        create: {
+          email: payload.email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          password: hashed,
+          role: "EMPLOYEE",
+          phone: payload.phone ?? null,
+          pictureUrl: payload.pictureUrl ?? null,
         },
       };
     }
 
     const employee = await prisma.employee.create({
       data,
-      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true } } },
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, pictureUrl: true, phone: true } } },
     });
 
     return res.status(201).json(employee);
@@ -131,26 +139,59 @@ export async function updateEmployee(req: Request, res: Response) {
     }
   }
 
-  // Do not allow password updates through this endpoint
   if ((payload as any).user?.password) {
     return res.status(400).json({ error: "Password updates are not allowed through this endpoint" });
   }
 
   try {
-    const employee = await prisma.employee.update({
+    // Build the update data for the employee
+    const employeeData: any = {};
+    if (payload.jobTitle !== undefined) employeeData.jobTitle = payload.jobTitle;
+    if (payload.department !== undefined) employeeData.department = payload.department;
+    if (payload.location !== undefined) employeeData.location = payload.location;
+    if (payload.hireDate !== undefined) employeeData.hireDate = payload.hireDate;
+
+    // Handle user data updates through the relation
+    if (payload.firstName !== undefined || payload.lastName !== undefined ||
+        payload.email !== undefined || payload.phone !== undefined || payload.pictureUrl !== undefined) {
+
+      const currentEmployee = await prisma.employee.findUnique({
+        where: { id },
+        select: { userId: true }
+      });
+
+      if (!currentEmployee) {
+        return res.status(404).json({ error: "Employee not found" });
+      }
+
+      const userUpdateData: any = {};
+      if (payload.firstName !== undefined) userUpdateData.firstName = payload.firstName;
+      if (payload.lastName !== undefined) userUpdateData.lastName = payload.lastName;
+      if (payload.email !== undefined) userUpdateData.email = payload.email;
+      if (payload.phone !== undefined) userUpdateData.phone = payload.phone;
+      if (payload.pictureUrl !== undefined) userUpdateData.pictureUrl = payload.pictureUrl;
+
+      await prisma.user.update({
+        where: { id: currentEmployee.userId },
+        data: userUpdateData
+      });
+
+      if (Object.keys(employeeData).length > 0) {
+        await prisma.employee.update({
+          where: { id },
+          data: employeeData
+        });
+      }
+    } else if (Object.keys(employeeData).length > 0) {
+      await prisma.employee.update({
+        where: { id },
+        data: employeeData
+      });
+    }
+
+    const employee = await prisma.employee.findUnique({
       where: { id },
-      data: {
-        ...(payload.firstName !== undefined ? { firstName: payload.firstName } : {}),
-        ...(payload.lastName !== undefined ? { lastName: payload.lastName } : {}),
-        ...(payload.email !== undefined ? { email: payload.email } : {}),
-        ...(payload.phone !== undefined ? { phone: payload.phone } : {}),
-        ...(payload.pictureUrl !== undefined ? { pictureUrl: payload.pictureUrl } : {}),
-        ...(payload.jobTitle !== undefined ? { jobTitle: payload.jobTitle } : {}),
-        ...(payload.department !== undefined ? { department: payload.department } : {}),
-        ...(payload.location !== undefined ? { location: payload.location } : {}),
-        ...(payload.hireDate !== undefined ? { hireDate: payload.hireDate } : {}),
-      },
-      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true } } },
+      include: { user: { select: { id: true, email: true, firstName: true, lastName: true, role: true, pictureUrl: true, phone: true } } },
     });
 
     return res.json(employee);
@@ -171,7 +212,13 @@ export async function deleteEmployee(req: Request, res: Response) {
   const { id } = req.params;
 
   try {
-    await prisma.employee.delete({ where: { id } });
+    const employee = await prisma.employee.findUnique({ where: { id }, select: { userId: true } });
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // Delete the user, Employee will cascade-delete due to onDelete: Cascade on relation
+    await prisma.user.delete({ where: { id: employee.userId } });
     return res.status(204).send();
   } catch (err: any) {
     console.error("deleteEmployee error:", err);

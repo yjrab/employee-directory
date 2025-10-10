@@ -32,6 +32,8 @@ export const nestedUserSchema = z
     firstName: z.string().min(1).optional(),
     lastName: z.string().min(1).optional(),
     role: z.enum(["ADMIN", "EMPLOYEE"]).optional(),
+    phone: z.string().optional(),
+    pictureUrl: z.string().url().optional(),
   })
   .strict();
 
@@ -39,9 +41,9 @@ export const createEmployeeSchema = z
   .object({
     userId: z.string().uuid().optional(),
     user: nestedUserSchema.optional(),
-    firstName: z.string().min(1),
-    lastName: z.string().min(1),
-    email: z.string().email(),
+    firstName: z.string().min(1).optional(),
+    lastName: z.string().min(1).optional(),
+    email: z.string().email().optional(),
     phone: z.string().optional(),
     pictureUrl: z.string().url().optional(),
     jobTitle: z.string().min(1),
@@ -49,7 +51,15 @@ export const createEmployeeSchema = z
     location: z.string().optional(),
     hireDate: z.preprocess((v) => (v ? new Date(v as string) : undefined), z.date().optional()),
   })
-  .strict();
+  .strict()
+  .refine(
+    (data) =>
+      !!data.user || (!!data.firstName && !!data.lastName && !!data.email),
+    {
+      message: "Provide either nested user or top-level firstName, lastName, and email",
+      path: ["user"],
+    }
+  );
 
 export const updateEmployeeSchema = createEmployeeSchema.partial().extend({
   userId: z.undefined().optional(),

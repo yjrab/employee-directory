@@ -1,0 +1,52 @@
+
+@import "tailwindcss";
+@reference "tailwindcss";
+
+/* Tailwind v4 theme tokens */
+@theme {
+  /* Primary palette */
+  --color-primary-50:  #eef7ff;
+  --color-primary-100: #d9ecff;
+  --color-primary-200: #b9dcff;
+  --color-primary-300: #8ec6ff;
+  --color-primary-400: #5aa7ff;
+  --color-primary-500: #2b84ff;
+  --color-primary-600: #1867e6;
+  --color-primary-700: #144fba;
+  --color-primary-800: #154494;
+  --color-primary-900: #173a78;
+
+  /* Accent palette */
+  --color-accent-50:  #fff1f2;
+  --color-accent-100: #ffe4e6;
+  --color-accent-200: #fecdd3;
+  --color-accent-300: #fda4af;
+  --color-accent-400: #fb7185;
+  --color-accent-500: #f43f5e;
+  --color-accent-600: #e11d48;
+  --color-accent-700: #be123c;
+  --color-accent-800: #9f1239;
+  --color-accent-900: #881337;
+
+  /* Custom shadows */
+  --shadow-card: 0 10px 25px -10px rgba(2, 6, 23, 0.2);
+}
+
+/* Global base reset and typography */
+@layer base {
+  html, body, #root { @apply h-full; }
+  body { @apply bg-gray-50 text-gray-800 antialiased; }
+  /* Avoid responsive variants in @apply for Tailwind v4 compatibility */
+  h1 { @apply text-3xl font-semibold tracking-tight; }
+  h2 { @apply text-2xl font-semibold tracking-tight; }
+  h3 { @apply text-xl font-semibold; }
+  a { @apply text-primary-600 hover:text-primary-700; }
+}
+
+/* Reusable component classes */
+@layer components {
+  .btn-primary { @apply inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-white shadow-sm hover:bg-primary-700 active:shadow focus:outline-none transition-colors transition-shadow; }
+  .btn-secondary { @apply inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-gray-700 ring-1 ring-gray-200 shadow-sm hover:bg-gray-50 active:shadow focus:outline-none transition-colors transition-shadow; }
+  .input { @apply block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 shadow-sm transition-colors duration-200 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500; }
+  .card { @apply rounded-xl bg-white shadow-card ring-1 ring-gray-100; }
+}
