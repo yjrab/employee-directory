@@ -14,11 +14,13 @@ if (!REFRESH_TOKEN_SECRET) {
   throw new Error("REFRESH_TOKEN_SECRET is invalid");
 }
 
-export const generateAccessToken = (payload: TokenPayload) =>
-  jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+export const generateAccessToken = (payload: TokenPayload) => {
+  return (jwt as any).sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+}
 
-export const generateRefreshToken = (payload: TokenPayload) =>
-  jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });;
+export const generateRefreshToken = (payload: TokenPayload) => {
+  return (jwt as any).sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
+}
 
 export const verifyRefreshToken = (token: string): TokenPayload | null => {
   try {

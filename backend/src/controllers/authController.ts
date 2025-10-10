@@ -111,7 +111,7 @@ export const refreshToken = async (req: Request, res: Response) => {
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = (_req: Request, res: Response) => {
   // Clear refresh token cookie
   res.clearCookie("refreshToken", {
     httpOnly: true,

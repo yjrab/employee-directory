@@ -6,7 +6,8 @@
     "outDir": "dist",                             
     "strict": true,                               
     "esModuleInterop": true,                      
-    "forceConsistentCasingInFileNames": true,     
+    "forceConsistentCasingInFileNames": true,    
+    "lib": ["ES2021", "DOM"],             
     "skipLibCheck": true,                         
     "noImplicitAny": true,                        
     "strictNullChecks": true,                     
@@ -14,8 +15,9 @@
     "moduleResolution": "node",                   
     "isolatedModules": true,                      
     "noUnusedLocals": true,                       
-    "noUnusedParameters": true,                   
-    "noFallthroughCasesInSwitch": true            
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["node"]   
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
