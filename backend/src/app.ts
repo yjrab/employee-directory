@@ -17,7 +17,7 @@ app.use(cookieParser());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // CORS
-const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || ["http://localhost:3000"];
+const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || ["http://localhost:5173"];
 app.use(
   cors({
     origin: allowedOrigins,
